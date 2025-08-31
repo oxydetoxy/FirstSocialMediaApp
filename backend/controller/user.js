@@ -274,10 +274,10 @@ const getUserProfile = async (req, res) => {
 };
 const getAllUser = async (req, res) => {
   try {
-    const userrs = await User.find({});
+    const users = await User.find({});
     res.status(200).json({
       success: true,
-      URLSearchParams,
+      users,
     });
   } catch (error) {
     res.status.json({
@@ -288,7 +288,15 @@ const getAllUser = async (req, res) => {
 };
 const forgotPassword = async (req, res) => {
   try {
-    const user = await User.find();
+    const user = await User.findById({email:req.body.email});
+
+    if(!user){
+      res.status(401).json({
+        success:false,
+        message :"no user found "
+
+      })
+    }
     const resetPasswordToken = user.getResetPasswordToken();
     await user.save();
     const resetUrl = `${req.protocal}://${req.get(
@@ -330,7 +338,7 @@ const resetPassword = async (req, res) => {
 
   const user = await User.findOne({
     resetPasswordToken: resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },//menas resert password token is greaetr then curren titme(rest link still valid)
+    resetPasswordExpire: { $gt: Date.now() }, //menas resert password token is greaetr then curren titme(rest link still valid)
   });
   if (!user) {
     return res.status(401).json({
@@ -338,9 +346,9 @@ const resetPassword = async (req, res) => {
       mesage: "either token expired or wron access",
     });
   }
-  user.password =req.body.params;
-  user.resetPasswordExpire=undefined;
-  user.resetPasswordToken=undefined;
+  user.password = req.body.params;
+  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = undefined;
   await user.save();
 };
 
@@ -356,5 +364,5 @@ module.exports = {
   getUserProfile,
   getAllUser,
   forgotPassword,
-  resetPassword
+  resetPassword,
 };
