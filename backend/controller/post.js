@@ -1,7 +1,6 @@
 const Post = require("../models/post");
 const User = require("../models/user");
 
-
 const createPost = async (req, res) => {
   try {
     const newPostData = await Post.create({
@@ -88,9 +87,8 @@ const deletePost = async (req, res) => {
 
     // Remove post reference from user's posts array
     const index = user.posts.indexOf(post._id);
-    
-      user.posts.splice(index, 1);
-    
+
+    user.posts.splice(index, 1);
 
     await user.save();
     await post.deleteOne(); // safer than remove()
@@ -107,6 +105,99 @@ const deletePost = async (req, res) => {
   }
 };
 
+const getPostOfFollowing = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate(
+      "following",
+      "posts"
+    );
+    res.status(200).json({
+      success: true,
+      followers: user.following,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const addcomments = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      res.status(401).json({
+        succcess: false,
+        message: "No post exist",
+      });
+    }
+    let commentExist = -1;
+    post.comments.forEach((items, index) => {
+      if (items.user.toString == req.user._id.toString) {
+        commentExist = index;
+      }
+    });
+    if (commentExist !== -1) {
+      post.comments[commentExist].comment = req.body.comment;
+      await post.save();
+      res.status(200).json({
+        succcess: true,
+        messgae: "comment updated",
+      });
+    } else {
+      post.push({
+        user: req.user._id,
+        comment: req.body.comment,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: message.error,
+    });
+  }
+};
+const deleteComment = async (req, res) => {
+  const commentIndex = -1;
+  try {
+    const post = await Post.findById(req.params.id);
 
+    if (post.owner.toString == req.user._id.params) {
+      post.comments.forEach((item, index) => {
+        if (item._id.toString === req.body.commentId.toString) {
+          return post.comments.splice(index, 1);
+        }
+      });
+      await post.save();
+      return res.status(200).json({
+        success: true,
+        message: "comemnt removed",
+      });
+    } else {
+      post.comments.forEach((item, index) => {
+        if (item.user.toString === req.user.id.toString) {
+          return post.comments.splice(index, 1);
+        }
+      });
+      await post.save();
+      res.status(200).json({
+        succcess: true,
+        message: "comemnt deleted",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: message.error,
+    });
+  }
+};
 
-module.exports = { createPost,likeDislike,deletePost };
+module.exports = {
+  createPost,
+  likeDislike,
+  deletePost,
+  getPostOfFollowing,
+  addcomments,
+  deleteComment
+};

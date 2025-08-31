@@ -23,9 +23,7 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
-
 module.exports = {
-    isAuthenticated
+  isAuthenticated,
 };
-// Compare this snippet from backend/app.js:
-// const express =
+
